@@ -15,7 +15,7 @@
 #define PM 1 //prob de a muta o solutie putin
 #define PM1 0.01 //probabilitatea de a muta o solutie mult
 #define PCX 0.2 //prob crossover
-#define ByteShuffleProp 0.33 //cat % bytes schimbam cand mutam mult
+
 
 
 class GeneticAlg
@@ -130,7 +130,6 @@ public:
 
 		descendenti.insert(descendenti.end(), Population.begin(), Population.end());
 
-		GenerateMinMax(descendenti);
 
 		std::sort(descendenti.begin(), descendenti.end(), [&descendenti, this](std::vector<char> a, std::vector<char> b) -> bool
 		{
