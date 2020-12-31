@@ -15,36 +15,70 @@
 #define PM 1 //prob de a muta o solutie putin
 #define PM1 0.01 //probabilitatea de a muta o solutie mult
 #define PCX 0.2 //prob crossover
+#define PT 0.95
 
 
 
 class GeneticAlg
 {
 public:
-	GeneticAlg(Experiment ex) : ex(ex), CumulativeProportions(POP_SIZE + 1), Population(POP_SIZE + 1), fff("Resz.txt")
+	GeneticAlg(Experiment ex) : ex(ex), CumulativeProportionsRoulette(POP_SIZE + 1), CumulativeProportionsRank(POP_SIZE+1), PopIntermediara(POP_SIZE + 1), Population(POP_SIZE + 1), writeOutput("Resz.txt")
 	{
 
 	}
 	
 private:
 	std::ofstream writeOutput;
-	std::vector<double> CumulativeProportions;
+	std::vector<double> CumulativeProportionsRoulette;
+	std::vector<double> CumulativeProportionsRank;
+	std::vector<std::vector<size_t>> PopIntermediara;
 	bool converges = false;
 	Experiment ex;
 
 
 
-	 std::vector<std::vector<char>> Population{ POP_SIZE };
+	 std::vector<std::vector<size_t>> Population{ POP_SIZE };
 
 public:
-	long double Fitness(/**/)
+	long double Fitness(std::vector<size_t>& townSequence)
 	{
-		//implement
+		long long distanta = 0;
+		for (int i = 0; i < townSequence.size() - 1; i++)
+		{
+			distanta += ex.distance[i][i + 1];
+		}
+		return (long double)1 / distanta;
 	}
 
-	void CalculateCumulativeProbabilityAndGenerationMinMax()
+	std::vector<size_t> TournamentSelection(size_t k)
 	{
+		std::vector<std::vector<size_t>> solutiiAlese(k);
+		for (int i = 0; i < k; i++)
+		{
+			size_t	poz = RandomHelpers::GetRandomFromRange<int>(0, POP_SIZE);
+			solutiiAlese[i] = Population[poz];
+		}
+		std::sort(solutiiAlese.begin(), solutiiAlese.end(), [&solutiiAlese, this](std::vector<size_t> a, std::vector<size_t> b) -> bool
+		{
+				return Fitness(a) < Fitness(b);
+		});
+		return solutiiAlese[k - 1];
+	}
+	std::vector<size_t> RankSelection()
+	{
+		long double randomNum = RandomHelpers::GetRandomFromRange<long double>(0, 1);
+		for (size_t i = 0; i < POP_SIZE; i++)
+		{
+			if (randomNum > CumulativeProportionsRank[i] && randomNum <= CumulativeProportionsRank[i + 1])
+			{
+				return PopIntermediara[i];
+			}
+		}
+	}
 
+	void CalculateCumulativeProbability()
+	{
+		//pentru rouletteWheel
 		long double T = 0;
 		std::vector<double> fValue(POP_SIZE); //fitness value
 		std::vector<double> proportion(POP_SIZE + 1);
@@ -52,7 +86,7 @@ public:
 	
 		for (int i = 0; i < POP_SIZE; i++)
 		{
-			fValue[i] = Fitness();
+			fValue[i] = Fitness(Population[i]);
 			T += fValue[i];
 		}
 
@@ -61,26 +95,46 @@ public:
 			proportion[i] = fValue[i]/T;
 		}
 
-		CumulativeProportions[0] = 0;
+		CumulativeProportionsRoulette[0] = 0;
 		for (int i = 0; i < POP_SIZE; i++)
 		{
-			CumulativeProportions[i + 1] = CumulativeProportions[i] + proportion[i];
-			if (isnan(CumulativeProportions[i]))
+			CumulativeProportionsRoulette[i + 1] = CumulativeProportionsRoulette[i] + proportion[i];
+			if (isnan(CumulativeProportionsRoulette[i]))
 			{
 				std::cout << "";
 			}
 		}
+
+
+		/// pentru rank
+
+		PopIntermediara = Population;
+		std::sort(PopIntermediara.begin(), PopIntermediara.end(), [this](std::vector<size_t> a, std::vector<size_t> b) -> bool
+		{
+				return Fitness(a) > Fitness(b);
+		});
+		std::vector<long double> weight(POP_SIZE), cumulativeProbability(POP_SIZE + 1);
+		size_t fitnessTotal = ((POP_SIZE+1) * (POP_SIZE)) / 2;
+		for (size_t ii = 0; ii < PopIntermediara.size(); ii++)
+		{
+			weight[ii] = (ii+1) / fitnessTotal;
+		}
+		CumulativeProportionsRank[0] = 0;
+		for (size_t ii = 0; ii < PopIntermediara.size(); ii++)
+		{
+			CumulativeProportionsRank[ii + 1] = CumulativeProportionsRank[ii] + weight[ii];
+		}
 	}
-	std::vector<char> GetParent()
+	std::vector<size_t> GetParent()
 	{
 		return RouletteWheel();
 	}
-	std::vector<char> RouletteWheel()
+	std::vector<size_t> RouletteWheel()
 	{
 		long double randomNum = RandomHelpers::GetRandomFromRange<long double>(0, 1);
 		for (size_t i = 0; i < POP_SIZE; i++)
 		{
-			if ( randomNum > CumulativeProportions[i] &&  randomNum <= CumulativeProportions[i+1] )
+			if ( randomNum > CumulativeProportionsRoulette[i] &&  randomNum <= CumulativeProportionsRoulette[i+1] )
 			{
 				return Population[i];
 			}
@@ -88,22 +142,22 @@ public:
 		
 		throw("Bad stuff hapening");
 	}
-	std::vector<std::vector<char>> GenerateSelection()
+	std::vector<std::vector<size_t>> GenerateSelection()
 	{
-		std::vector<std::vector<char>> descendenti;
+		std::vector<std::vector<size_t>> descendenti;
 		descendenti.reserve(POP_SIZE);
 	
 		
 		while (descendenti.size() < POP_SIZE)
 		{
-			std::vector<char> mother, father;
+			std::vector<size_t> mother, father;
 			mother = GetParent();
 			father = GetParent();
 			while (mother == father)
 			{
 				father = GetParent();
 			}
-			std::vector<char> fiu1, fiu2;
+			std::vector<size_t> fiu1, fiu2;
 			if (RandomHelpers::GetRandomFromRange<double>(0, 1) <= PCX)
 			{
 				auto v = Crossover(PCX, mother, father);
@@ -131,12 +185,12 @@ public:
 		descendenti.insert(descendenti.end(), Population.begin(), Population.end());
 
 
-		std::sort(descendenti.begin(), descendenti.end(), [&descendenti, this](std::vector<char> a, std::vector<char> b) -> bool
+		std::sort(descendenti.begin(), descendenti.end(), [&descendenti, this](std::vector<size_t> a, std::vector<size_t> b) -> bool
 		{
-			return Fitness(ConvertBack(a, d[ex.function], ex.comp_size)) < Fitness(ConvertBack(b, d[ex.function], ex.comp_size));
+			return Fitness(a) < Fitness(b);
 		});
 
-		descendenti = std::vector<std::vector<char>>(descendenti.begin() + POP_SIZE, descendenti.end());
+		descendenti = std::vector<std::vector<size_t>>(descendenti.begin() + POP_SIZE, descendenti.end());
 
 		for (int i=0; i< POP_SIZE / 2 ; i++)
 		{
@@ -146,7 +200,7 @@ public:
 	}
 	
 
-	void MutateSlightly(double pm, std::vector<char>& first, std::vector<char>& second)
+	void MutateSlightly(double pm, std::vector<size_t>& first, std::vector<size_t>& second)
 	{
 		if (RandomHelpers::GetRandomFromRange<long double>(0, 1) > 0.5)
 		{
@@ -160,7 +214,7 @@ public:
 		}
 		
 	}
-	void Mutate(double pm, std::vector<char>& first)
+	void Mutate(double pm, std::vector<size_t>& first)
 	{
 		if (RandomHelpers::GetRandomFromRange<long double>(0, 1) > 0.5)
 		{
@@ -178,33 +232,32 @@ public:
 
 	
 
-	std::pair<std::vector<char>, std::vector<char>> Crossover(double pcx, std::vector<char> first, std::vector<char> second)
+	std::pair<std::vector<size_t>, std::vector<size_t>> Crossover(double pcx, std::vector<size_t> first, std::vector<size_t> second)
 	{
-		
+		return {};
 	}
 
-	std::vector<char> RunBasicGA()
+	std::vector<size_t> RunBasicGA()
 	{
 
 		size_t t = 0;
 
-		std::vector<char> best = Population[0];
-		Population = RandomHelpers::GenerateRandomPopulation(POP_SIZE, ex.solution_size);
-		long double minVal = std::numeric_limits<long double>::max();
+		std::vector<size_t> best = Population[0];
+		//Population = RandomHelpers::GenerateRandomPopulation(POP_SIZE, ex.solution_size);
+		long double maxFitness = std::numeric_limits<long double>::max();
 		while (t <= MaxGenerations && !converges)
 		{
 			t++;
 			
-			CalculateCumulativeProbabilityAndGenerationMinMax();
-			if (minF == maxF)
-				return best;
+			CalculateCumulativeProbability();
+
 			auto newPop = GenerateSelection();
 			for (size_t i = 0; i < Population.size(); i++) /// update best 
 			{
-				long double temp = eval;
-				if (temp < minVal)
+				long double temp = Fitness(Population[i]);
+				if (temp > maxFitness)
 				{
-					minVal = temp;
+					maxFitness = temp;
 					best = Population[i];
 				}
 			}
@@ -214,6 +267,5 @@ public:
 		return best;
 	}
 };
-
 
 
