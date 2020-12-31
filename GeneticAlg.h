@@ -47,6 +47,7 @@ public:
 		{
 			distanta += ex.distance[i][i + 1];
 		}
+		distanta += ex.distance[townSequence.size() - 1][0];
 		return (long double)1 / distanta;
 	}
 
