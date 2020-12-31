@@ -3,7 +3,8 @@
 #include<vector>
 #include "Generate.h"
 class Crossover
-{public:
+{
+ public:
 	//father = [ ff | ss ]
 
 //mother = [ gg | cc]
@@ -12,7 +13,7 @@ class Crossover
 //offstring B=gg ss
 //luam ff din father si verificam in tot mother daca exista valori de genul si apoi valorile ce raman le punem in mother
 //
-	std::vector<size_t>SetOffstring(size_t nr_population, std::vector<size_t>parent1, std::vector<size_t>parent2)
+	static std::vector<size_t>SetOffstring(size_t nr_population, std::vector<size_t>parent1, std::vector<size_t>parent2)
 	{
 		std::vector<size_t> offstringA(nr_population, 0);
 		size_t size_pop = 0;
@@ -42,7 +43,7 @@ class Crossover
 		return offstringA;
 	}
 
-  void Crossoverul(size_t nr_population, std::vector<size_t>&offstringA, std::vector<size_t>&offstringB)
+  static void Crossoverul(size_t nr_population, std::vector<size_t>&offstringA, std::vector<size_t>&offstringB)
 	{
 	  std::vector<size_t> father, mother;
 
