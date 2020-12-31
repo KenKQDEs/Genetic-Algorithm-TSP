@@ -51,6 +51,16 @@ class Generate
 		sol = p.Shuffle(NumberPopulation, sol);
 		return sol;
 	}
+	
+	std::vector<size_t> generatePopulation(int NumberPopulation)
+	{
+		std::vector<size_t> vect(NumberPopulation, 0);
+		for (auto i = 0; i < vect.size(); i++)
+			vect[i] = i;
+		std::shuffle(vect.begin(), vect.end(), Generator);
+
+		return vect;
+	}
 	static void PrintSolution(std::vector<size_t>population)
 	{
 		for (auto const& i : population)
