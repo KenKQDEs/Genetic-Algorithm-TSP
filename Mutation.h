@@ -5,7 +5,7 @@
 class Mutation
 {
 public:
-	void Mutate(std::vector<size_t>offstringA, std::vector<size_t>offstringB,size_t MutationChange)
+	static void Mutate(std::vector<size_t>offstringA, std::vector<size_t>offstringB,size_t MutationChange)
 	{
 		Generate g;
 		std::vector<size_t>newoffstringA(offstringA.size(),0);
@@ -21,7 +21,7 @@ public:
 			newoffstringB = mutate(offstringB);
 		}
 	}
-	std::vector<size_t> mutate(std::vector<size_t>offString)
+	static std::vector<size_t> mutate(std::vector<size_t>offString)
 	{
 		Generate g;
 		std::vector<size_t> newoff;
@@ -39,7 +39,7 @@ public:
 		}
 		return newoff;
 	}
-	std::vector<size_t> SwapMutate(std::vector<size_t>offString,size_t poz1,size_t poz2)
+	static std::vector<size_t> SwapMutate(std::vector<size_t>offString,size_t poz1,size_t poz2)
 	{
 		
 	
@@ -50,7 +50,7 @@ public:
 		newoff[poz2] = aux;*/
 		return newoff;
 	}
-	std::vector<size_t>RotateMutate(std::vector<size_t>offString, size_t poz1, size_t poz2)
+	static std::vector<size_t>RotateMutate(std::vector<size_t>offString, size_t poz1, size_t poz2)
 	{
 		std::vector<size_t>rotate = offString;
 		size_t aux;
