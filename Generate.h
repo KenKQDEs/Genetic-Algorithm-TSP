@@ -32,7 +32,7 @@ class Generate
 	}
 
 	
-	std::vector<size_t> generateSolution(int NumberPopulation)
+	std::vector<size_t> generatePop(int NumberPopulation)
 	{
 		std::vector<size_t> vect(NumberPopulation, 0);
 		for (auto i = 0; i < vect.size(); i++)
