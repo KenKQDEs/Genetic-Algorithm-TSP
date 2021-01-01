@@ -1,4 +1,5 @@
 #pragma once
+#define POP_SIZE 100
 #include <random>
 #include <iostream>
 class Generate
@@ -13,7 +14,8 @@ class Generate
 		int Number = (int)distr(Generator);
 		return Number;
 	}
-	//initial am gresit putin si am facut generator de random intre 0 si numberPopulation si mda
+	
+	
 	std::vector<size_t>Generat_Random(int NumberPopulation)
 	{
 
@@ -29,30 +31,8 @@ class Generate
 		return vect;
 	}
 
-
-	std::vector<size_t>GeneratePopulation(int NumberPopulation)
-	{
-		std::vector<size_t> vect(NumberPopulation, 0);
-		for (auto i = 0; i < vect.size(); i++)
-			vect[i] = i;
-		return vect;
-	}
-	std::vector<size_t>Shuffle(int NumberPopulation, std::vector<size_t>pop)
-	{
-		std::vector<size_t>population = pop;
-
-		std::shuffle(population.begin(), population.end(), Generator);
-		return population;
-	}
-	std::vector<size_t>Population(int NumberPopulation)
-	{
-		Generate p;
-		std::vector<size_t> sol = p.GeneratePopulation(NumberPopulation);
-		sol = p.Shuffle(NumberPopulation, sol);
-		return sol;
-	}
 	
-	std::vector<size_t> generatePopulation(int NumberPopulation)
+	std::vector<size_t> generateSolution(int NumberPopulation)
 	{
 		std::vector<size_t> vect(NumberPopulation, 0);
 		for (auto i = 0; i < vect.size(); i++)
@@ -60,6 +40,19 @@ class Generate
 		std::shuffle(vect.begin(), vect.end(), Generator);
 
 		return vect;
+	}
+	std::vector<std::vector<size_t>>generatePopulation()
+	{
+		std::vector<std::vector<size_t>>Pop;
+		std::vector<size_t> vect(POP_SIZE, 0);
+		for (auto i = 0; i < POP_SIZE; i++)
+		{
+			for (auto ii = 0; ii < vect.size(); ii++)
+				vect[ii] = ii;
+			std::shuffle(vect.begin(), vect.end(), Generator);
+			Pop.push_back(vect);
+		}
+
 	}
 	static void PrintSolution(std::vector<size_t>population)
 	{
