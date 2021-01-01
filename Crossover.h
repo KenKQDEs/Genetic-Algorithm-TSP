@@ -9,7 +9,7 @@ class Crossover
 {
 public:
   
-    static  std::vector<size_t>SetOff(size_t nr_orase, std::vector<size_t>& father, std::vector<size_t>& mother)
+    static  std::vector<size_t>SetOffspring(size_t nr_orase, std::vector<size_t>& father, std::vector<size_t>& mother)
     {
         size_t size_pop = 0;
         std::unordered_map<size_t, int>occurences;
@@ -33,8 +33,8 @@ public:
     static std::pair< std::vector<size_t>, std::vector<size_t>> Crossoverul(size_t nr_orase, std::vector<size_t>& father, std::vector<size_t>& mother)
     {
 
-        auto offstringB = SetOff(nr_orase, mother, father);
-        auto offstringA = SetOff(nr_orase, father, mother);
+        auto offstringB = SetOffspring(nr_orase, mother, father);
+        auto offstringA = SetOffspring(nr_orase, father, mother);
 
         return { offstringA, offstringB };
 
