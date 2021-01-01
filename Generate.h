@@ -32,7 +32,7 @@ class Generate
 	}
 
 	
-	std::vector<size_t> generatePop(int NumberPopulation)
+	std::vector<size_t> generateSolution(int NumberPopulation)
 	{
 		std::vector<size_t> vect(NumberPopulation, 0);
 		for (auto i = 0; i < vect.size(); i++)
@@ -41,18 +41,16 @@ class Generate
 
 		return vect;
 	}
-	std::vector<std::vector<size_t>>generatePopulation()
+	std::vector<std::vector<size_t>>generatePopulation(int NumberPopulation)
 	{
 		std::vector<std::vector<size_t>>Pop;
 		std::vector<size_t> vect(POP_SIZE, 0);
 		for (auto i = 0; i < POP_SIZE; i++)
 		{
-			for (auto ii = 0; ii < vect.size(); ii++)
-				vect[ii] = ii;
-			std::shuffle(vect.begin(), vect.end(), Generator);
-			Pop.push_back(vect);
+		vect=generateSolution(NumberPopulation);
+			Pop.pushback(vect);
 		}
-
+	return Pop;
 	}
 	static void PrintSolution(std::vector<size_t>population)
 	{
