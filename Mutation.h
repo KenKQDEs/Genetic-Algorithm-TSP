@@ -5,39 +5,42 @@
 class Mutation
 {
 public:
-	static void Mutate(std::vector<size_t>offstringA, std::vector<size_t>offstringB,size_t MutationChange)
+	static void Mutate(std::vector<size_t>&offstringA, std::vector<size_t>& offstringB,size_t MutationChange)
 	{
 		Generate g;
-		std::vector<size_t>newoffstringA(offstringA.size(),0);
-		std::vector<size_t>newoffstringB(offstringB.size(),0);
-		newoffstringA = offstringA;
-		newoffstringB = offstringB;
-		if (g.GetRandomFromRange<long double>(0, 1) < MutationChange)//nu stiu cat e rand() ala din functia  0.2 ar trebui sa fie gen random.NextDouble()
+		//g.PrintSolution(offstringA);
+		//g.PrintSolution(offstringB);
+		if (g.GetRandomFromRange<long double>(0, 1) < MutationChange)
 		{
-			newoffstringA = mutate(offstringA);
+			offstringA = mutate(offstringA);
 		}
 		if (g.GetRandomFromRange<long double>(0, 1) < MutationChange)
 		{
-			newoffstringB = mutate(offstringB);
+			offstringB = mutate(offstringB);
 		}
+		//g.PrintSolution(offstringA);
+		//g.PrintSolution(offstringB);
 	}
-	static std::vector<size_t> mutate(std::vector<size_t>offString)
+	static std::vector<size_t> mutate(std::vector<size_t>& offSpring)
 	{
 		Generate g;
 		std::vector<size_t> newoff;
-		size_t poz1 = g.Rand(0, offString.size() - 1);
-		size_t poz2 = g.Rand(0, offString.size() - 1);
+		size_t poz1 = g.Rand(1, offSpring.size() - 1);
+		size_t poz2 = g.Rand(1, offSpring.size() - 1);
+	
 		if (g.GetRandomFromRange<long double>(0,1) > 0.5)//nu stiu cat e rand() ala din functia  0.2 ar trebui sa fie gen random.NextDouble() 
 		{
 			// Do swap  mutate
-			newoff = SwapMutate(offString,poz1,poz2);
+			//std::cout << "Swap mutation: \n";
+			newoff = SwapMutate(offSpring,poz1,poz2);
 		}
 		else
 		{
 			// do rotate mutate
-			newoff = RotateMutate(offString, poz1, poz2);
+			//std::cout << "Rotation mutation: \n";
+			newoff = RotateMutate(offSpring, poz1, poz2);
 		}
-		return newoff;
+		return offSpring = newoff;
 	}
 	static std::vector<size_t> SwapMutate(std::vector<size_t>offString,size_t poz1,size_t poz2)
 	{
@@ -54,12 +57,12 @@ public:
 	{
 		std::vector<size_t>rotate = offString;
 		size_t aux;
-		size_t firstIndex, q,secondIndex;
-		if (poz1 < poz2)
-		{firstIndex = poz1; secondIndex = poz2;} 
-		else { firstIndex = poz2; secondIndex = poz1; }
+		if (poz1 > poz2)
+		{
+			std::swap(poz1, poz2);
+		}
 		
-		std::reverse(rotate.begin()+firstIndex,rotate.begin()+secondIndex+1);
+		std::reverse(rotate.begin()+ poz1, rotate.begin()+ poz2 + 1);
 		/*
 		while (firstIndex<secondIndex)
 			{

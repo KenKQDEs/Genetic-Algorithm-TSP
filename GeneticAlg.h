@@ -5,17 +5,22 @@
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <numeric>
+#include <cmath>
 #include "Random.h"
 #include "Conversion.h"
 #include "Experiment.h"
 #include "BenchmarkFunctions.h"
+#include "Mutation.h"
+#include "Crossover.h"
 
-#define MaxGenerations 1000
-#define POP_SIZE 100
+#define MaxGenerations 3000
+#define POP_SIZE 300
 #define PM 1 //prob de a muta o solutie putin
-#define PM1 0.01 //probabilitatea de a muta o solutie mult
+#define PM1 0.051111 //probabilitatea de a muta o solutie mult
 #define PCX 0.2 //prob crossover
-#define PT 0.95
+#define MAX_GENS_NO_IMPROVEMENT 200
+//#define PT 0.95
 
 
 
@@ -33,6 +38,7 @@ private:
 	std::vector<double> CumulativeProportionsRank;
 	std::vector<std::vector<size_t>> PopIntermediara;
 	bool converges = false;
+	size_t last_improvement = 0;
 	Experiment ex;
 
 
@@ -42,13 +48,13 @@ private:
 public:
 	long double Fitness(std::vector<size_t>& townSequence)
 	{
-		long long distanta = 0;
+		long double distanta = 0;
 		for (int i = 0; i < townSequence.size() - 1; i++)
 		{
-			distanta += ex.distance[i][i + 1];
+			distanta += ex.distance[townSequence[i]][townSequence[i + 1]];
 		}
-		distanta += ex.distance[townSequence.size() - 1][0];
-		return (long double)1 / distanta;
+		distanta += ex.distance[townSequence[townSequence.size() - 1]][townSequence[0]];
+		return distanta;
 	}
 
 	std::vector<size_t> TournamentSelection(size_t k)
@@ -61,7 +67,7 @@ public:
 		}
 		std::sort(solutiiAlese.begin(), solutiiAlese.end(), [&solutiiAlese, this](std::vector<size_t> a, std::vector<size_t> b) -> bool
 		{
-				return Fitness(a) < Fitness(b);
+				return Fitness(a) > Fitness(b);
 		});
 		return solutiiAlese[k - 1];
 	}
@@ -102,7 +108,7 @@ public:
 			CumulativeProportionsRoulette[i + 1] = CumulativeProportionsRoulette[i] + proportion[i];
 			if (isnan(CumulativeProportionsRoulette[i]))
 			{
-				std::cout << "";
+				std::cout << "*****";
 			}
 		}
 
@@ -118,17 +124,30 @@ public:
 		size_t fitnessTotal = ((POP_SIZE+1) * (POP_SIZE)) / 2;
 		for (size_t ii = 0; ii < PopIntermediara.size(); ii++)
 		{
-			weight[ii] = (ii+1) / fitnessTotal;
+			weight[ii] = ((long double)ii+1) / fitnessTotal;
 		}
 		CumulativeProportionsRank[0] = 0;
 		for (size_t ii = 0; ii < PopIntermediara.size(); ii++)
 		{
 			CumulativeProportionsRank[ii + 1] = CumulativeProportionsRank[ii] + weight[ii];
-		}
+		}	
 	}
 	std::vector<size_t> GetParent()
 	{
-		return RouletteWheel();
+		long double p = RandomHelpers::GetRandomFromRange<long double>(0, 1);
+		if (p < 0.5)
+		{
+			return RouletteWheel();
+		}
+		else
+		//else if (p< 0.7)
+		/*{
+			return RankSelection();
+		}else*/
+		/*else
+		{*/
+			return TournamentSelection(2);
+		//}
 	}
 	std::vector<size_t> RouletteWheel()
 	{
@@ -145,38 +164,52 @@ public:
 	}
 	std::vector<std::vector<size_t>> GenerateSelection()
 	{
+		
+		long double avgFit = 0;
+		for (auto& vec : Population)
+		{
+			avgFit += Fitness(vec);
+		}
+		avgFit /= POP_SIZE;
+
 		std::vector<std::vector<size_t>> descendenti;
 		descendenti.reserve(POP_SIZE);
-	
 		
 		while (descendenti.size() < POP_SIZE)
 		{
 			std::vector<size_t> mother, father;
 			mother = GetParent();
 			father = GetParent();
-			while (mother == father)
+			/*while (mother == father)
 			{
 				father = GetParent();
-			}
+			}*/
+			
 			std::vector<size_t> fiu1, fiu2;
 			if (RandomHelpers::GetRandomFromRange<double>(0, 1) <= PCX)
 			{
-				auto v = Crossover(PCX, mother, father);
+				auto v = Crossover(mother, father);
 				fiu1 = v.first;
 				fiu2 = v.second;
 			}
 			else
+			{
 				continue;
+			}
 
 			//Mutate
-			if (RandomHelpers::GetRandomFromRange<long double>(0, 1) <= PM)
+			long double pm = PM1;
+			if (Fitness(fiu1) < avgFit) pm = pm * 5;
+
+			if (RandomHelpers::GetRandomFromRange<long double>(0, 1) <= pm)
 			{
-				MutateSlightly(PM, fiu1, fiu2);
+				Mutate(fiu1);
 			}
-			else
+			pm = PM1;
+			if (Fitness(fiu2) < avgFit) pm = pm * 5;
+			if (RandomHelpers::GetRandomFromRange<long double>(0, 1) <= pm)
 			{
-				Mutate(PM, fiu1);
-				Mutate(PM, fiu2);
+				Mutate(fiu2);
 			}
 
 			descendenti.push_back(fiu1);
@@ -188,56 +221,50 @@ public:
 
 		std::sort(descendenti.begin(), descendenti.end(), [&descendenti, this](std::vector<size_t> a, std::vector<size_t> b) -> bool
 		{
-			return Fitness(a) < Fitness(b);
+			return Fitness(a) > Fitness(b);
+		});
+		for (int i = 0; i < POP_SIZE; i++)
+		{
+			Mutate(Population[i]);
+		}
+		std::sort(descendenti.begin(), descendenti.end(), [&descendenti, this](std::vector<size_t> a, std::vector<size_t> b) -> bool
+		{
+				return Fitness(a) > Fitness(b);
 		});
 
 		descendenti = std::vector<std::vector<size_t>>(descendenti.begin() + POP_SIZE, descendenti.end());
 
-		for (int i=0; i< POP_SIZE / 2 ; i++)
-		{
-			Mutate(PM1, descendenti[i]);
-		}
 		return descendenti;
 	}
 	
 
-	void MutateSlightly(double pm, std::vector<size_t>& first, std::vector<size_t>& second)
-	{
-		if (RandomHelpers::GetRandomFromRange<long double>(0, 1) > 0.5)
-		{
-		
-		
-				
-		}
-		else
-		{
 
-		}
-		
-	}
-	void Mutate(double pm, std::vector<size_t>& first)
+	void Mutate(std::vector<size_t>& first)
 	{
-		if (RandomHelpers::GetRandomFromRange<long double>(0, 1) > 0.5)
-		{
-		
+	
+			//Generate::PrintSolution(first);
+			Mutation::mutate(first);
+			//Generate::PrintSolution(first);
 			
-				
-		}
-		else
-		{
-			
-		}
-		
+
 	}
 
 
 	
 
-	std::pair<std::vector<size_t>, std::vector<size_t>> Crossover(double pcx, std::vector<size_t> first, std::vector<size_t> second)
+	std::pair<std::vector<size_t>, std::vector<size_t>> Crossover(std::vector<size_t> first, std::vector<size_t> second)
 	{
-		return {};
+		return Crossover::Crossoverul(first, second);
 	}
-
+	long double CalculateDistance(std::vector<size_t> towns)
+	{
+		long double distance = 0;
+		for (int i = 0; i < towns.size() - 1; i++)
+		{
+			distance += ex.distance[towns[i]][towns[i + 1]];
+		}
+		return distance;
+	}
 	std::vector<size_t> RunBasicGA()
 	{
 
@@ -245,28 +272,52 @@ public:
 
 		std::vector<size_t> best = Population[0];
 		//Population = RandomHelpers::GenerateRandomPopulation(POP_SIZE, ex.solution_size);
-		long double maxFitness = std::numeric_limits<long double>::max();
+		Population = Generate::generatePopulation(ex.TownNumber);
+
+		/*for (auto& vec : Population)
+		{
+			Generate::PrintSolution(vec);
+		}*/
+
+
+		long double minFitness = std::numeric_limits<long double>::max();
 		while (t <= MaxGenerations && !converges)
 		{
 			t++;
 			
 			CalculateCumulativeProbability();
-
-			auto newPop = GenerateSelection();
+			/*long double minF = CalculateDistance(Population[0]);
+			bool equal = true;
+			for (int i = 1; i < POP_SIZE; i++)
+			{
+				if (minF != CalculateDistance(Population[i]))
+				{
+					equal = false;
+					break;
+				}
+			}
+			if (equal == true)
+			{
+				converges = true;
+				continue;
+			}*/
+			std::vector<std::vector<size_t>> newPop = GenerateSelection();
 			for (size_t i = 0; i < Population.size(); i++) /// update best 
 			{
 				long double temp = Fitness(Population[i]);
-				if (temp > maxFitness)
+				if (temp < minFitness)
 				{
-					maxFitness = temp;
+					minFitness = temp;
 					best = Population[i];
+					last_improvement = t;
 				}
 			}
 			Population = newPop;
-			
+			if(abs((int)(t-last_improvement) > MAX_GENS_NO_IMPROVEMENT))
+				break;
 		}
 		return best;
 	}
 };
 
-
+//lin 318 42029

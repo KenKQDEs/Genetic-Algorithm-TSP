@@ -1,20 +1,20 @@
 #pragma once
 #include <iostream>
-#include<vector>
+#include  <vector>
 #include "Generate.h"
-#include "Rand.h"
+#include "Random.h"
 #include <map>
 #include <unordered_map>
 class Crossover
 {
 public:
   
-    static  std::vector<size_t>SetOffspring(size_t nr_orase, std::vector<size_t>& father, std::vector<size_t>& mother)
+    static  std::vector<size_t>SetOffspring(std::vector<size_t>& father, std::vector<size_t>& mother, size_t split)
     {
         size_t size_pop = 0;
         std::unordered_map<size_t, int>occurences;
 
-       size_t split = RandomHelpers::GetRandomFromRange<int>(1, father.size() - 1);
+       
        //size_t split = 6;
 
         std::vector<size_t> offstringA(father.begin(), father.begin() + split);
@@ -30,11 +30,17 @@ public:
             }
         return offstringA;
     }
-    static std::pair< std::vector<size_t>, std::vector<size_t>> Crossoverul(size_t nr_orase, std::vector<size_t>& father, std::vector<size_t>& mother)
+    static std::pair< std::vector<size_t>, std::vector<size_t>> Crossoverul(std::vector<size_t>& father, std::vector<size_t>& mother)
     {
-
-        auto offstringB = SetOffspring(nr_orase, mother, father);
-        auto offstringA = SetOffspring(nr_orase, father, mother);
+        //std::cout << "Crossover"<<std::endl;
+        //Generate::PrintSolution(mother);
+        //Generate::PrintSolution(father);
+        size_t split = RandomHelpers::GetRandomFromRange<int>(1, father.size() - 1);
+        auto offstringB = SetOffspring(mother, father, split);
+        auto offstringA = SetOffspring(father, mother, split);
+        //std::cout << "After" << std::endl;
+        //Generate::PrintSolution(mother);
+        //Generate::PrintSolution(father);
 
         return { offstringA, offstringB };
 

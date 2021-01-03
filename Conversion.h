@@ -9,6 +9,7 @@ void PrintCharBytes(std::vector<char>& bytes);
 bool SameByteVector(std::vector<char>& a, std::vector<char>& b);
 
 
+
 template<typename Vector>
 auto split_vector(const Vector& v, unsigned number_lines) 
 {
