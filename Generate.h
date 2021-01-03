@@ -1,5 +1,5 @@
 #pragma once
-#define POP_SIZE 200
+#define POP_SIZE 300
 #include <random>
 #include <iostream>
 #include <fstream>
