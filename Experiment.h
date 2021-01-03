@@ -1,49 +1,32 @@
 #pragma once
 #include <iostream>
-#include "BenchmarkFunctions.h"
-#include <map>
+#include <string>
+#include <vector>
+#include "InputOutput.h"
+#include "Generate.h"
 class Experiment
 {
 public:
-	size_t precision;
-	Functions function;
-	size_t dimensions;
-	size_t solution_size;
-	size_t comp_size;
-	std::map < Functions, Domain> d =
-	{
-		{ Functions::Rastrigin,	 Domain(-5.12, 5.12)},
-		{ Functions::DeJong1,    Domain(-5.12, 5.12)},
-		{ Functions::Schewefel,  Domain(-500, 500) },
-		{ Functions::Michalewicz, 	Domain(0, PI) }
-	};
+	size_t TownNumber;
+	unsigned long TotalDistance = 0;
+	std::vector<std::vector<long double>> distance;
+	
 	Experiment() = delete;
-	Experiment(size_t dimensions, size_t precision, Functions function) : dimensions(dimensions), function(function), precision(precision)
+	Experiment(std::string fileName)
 	{
-		CalculateBytesNumber(dimensions, precision, d[function]);
+		std::ofstream writeOutput("Resz.txt");
+		for (auto& vec : distance)
+		{
+			vec.reserve(TownNumber);
+		}
+		auto rez = InputOutput::CitesteCoordonate2D(fileName);
+		TownNumber = rez.size();
+		distance = InputOutput::calculateDistance(rez);
+		Generate::PrintMatrix(distance, writeOutput);
 	}
 
-	void CalculateBytesNumber(size_t Dims, size_t precision, std::pair<double, double> Interval)
-	{
-		solution_size = Dims * ceil(log2(pow(10, precision) * (Interval.second - Interval.first)));
-		comp_size = solution_size / Dims;
-	}
 	~Experiment()
 	{
-		switch (function)
-		{
-		case Functions::Rastrigin:
-			std::cout << "Run experiment on Rastrigin with precision " << precision << " and " << dimensions << " dimensions.";
-			break;
-		case Functions::DeJong1:
-			std::cout << "Run experiment on DeJong1 with precision " << precision << " and " << dimensions << " dimensions.";
-			break;
-		case Functions::Schewefel:
-			std::cout << "Run experiment on Schewefel with precision " << precision << " and " << dimensions << " dimensions.";
-			break;
-		case Functions::Michalewicz:
-			std::cout << "Run experiment on Michalewicz with precision " << precision << " and " << dimensions << " dimensions.";
-			break;
-		}
+		std::cout << "Run an experiment on " << TownNumber << "number of towns" << std::endl;
 	}
 };
