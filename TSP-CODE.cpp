@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include "GeneticAlg.h"
+#include "Christofides.h"
+
 int main()
 {
 	Experiment ex("inst/lin318.txt");
@@ -13,8 +15,17 @@ int main()
 	//}
 	//auto v = alg.CalculateDistance({ 0, 13, 12, 11, 6, 5, 14, 4, 10, 8, 9, 15, 2, 1, 3, 7 }); //1 14 13 12 7 6 15 5 11 9 10 16 3 2 4 8
 	//auto v = alg.CalculateDistance(vec); //1 14 13 12 7 6 15 5 11 9 10 16 3 2 4 8
-	auto res = alg.RunBasicGA();
-	auto resres = alg.CalculateDistance(res);
+	/*auto res = alg.RunBasicGA();
+	auto resres = alg.CalculateDistance(res);*/
+	Christofides alg2(ex);
+
+	auto res = alg2.RunCA();
+	std::vector<size_t> rezT;
+	for (auto& val : res)
+	{
+		rezT.push_back((size_t)val);
+	}
+	auto resres = alg.CalculateDistance(rezT);
 	std::cout << resres;
 }
 
